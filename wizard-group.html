@@ -358,6 +358,7 @@
       <button class="tab-btn" data-view="agenda" onclick="switchView('agenda')">Agenda</button>
     </div>
     <div class="user-chip">
+      <span class="user-badge mono" id="sync-status" style="border-color: rgba(150,154,158,0.22);">● conectando…</span>
       <span class="user-badge mono" id="user-badge">—</span>
       <button class="icon-btn" onclick="logout()" title="Salir">⏻</button>
     </div>
@@ -656,8 +657,13 @@ function saveState(){
     localStorage.setItem('wg_polizas', JSON.stringify(polizas));
     localStorage.setItem('wg_agenda', JSON.stringify(agenda));
   }catch(e){ console.warn('No se pudo guardar localmente', e); }
+  // Sincroniza a Firestore si ya está listo (ver script type=module al final del archivo)
+  if(window.cloudSave){
+    window.cloudSave({ maxPool, tree, polizas, agenda });
+  }
 }
 function loadState(){
+  // Carga inmediata desde caché local (offline-first), mientras llega el estado real de Firestore
   try{
     const mp = localStorage.getItem('wg_maxPool');
     if(mp) { maxPool = parseInt(mp,10); document.getElementById('pool-max').value = maxPool; }
@@ -665,6 +671,18 @@ function loadState(){
     polizas = JSON.parse(localStorage.getItem('wg_polizas') || '[]');
     agenda = JSON.parse(localStorage.getItem('wg_agenda') || '[]');
   }catch(e){ console.warn('No se pudo cargar estado local', e); }
+}
+// Llamado desde el script de Firebase cuando llega un cambio remoto (propio o de Mariano)
+function applyRemoteState(data){
+  maxPool = data.maxPool || 10;
+  tree = data.tree || [];
+  polizas = data.polizas || [];
+  agenda = data.agenda || [];
+  const poolInput = document.getElementById('pool-max');
+  if(poolInput) poolInput.value = maxPool;
+  if(document.getElementById('app').style.display !== 'none'){
+    renderTree(); renderPolizas(); renderAgenda();
+  }
 }
 function onPoolChange(){
   maxPool = parseInt(document.getElementById('pool-max').value,10) || 10;
@@ -1121,6 +1139,66 @@ addSimpleRow('node-telefonos','tel','11-XXXX-XXXX');
 addDireccionRow('','');
 addSimpleRow('poliza-emails','email','ejemplo@correo.com',3);
 addSimpleRow('poliza-telefonos','tel','11-XXXX-XXXX',3);
+</script>
+
+<!-- ============ FIREBASE — sincronización en tiempo real ============ -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDmHI5H9DaQWxd69Z-7dQ8bWwYgmcjttos",
+    authDomain: "wizard-group-cad20.firebaseapp.com",
+    projectId: "wizard-group-cad20",
+    storageBucket: "wizard-group-cad20.firebasestorage.app",
+    messagingSenderId: "107721300249",
+    appId: "1:107721300249:web:c3a88cc78f18e4729ecd88"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  const estadoDocRef = doc(db, "wizardgroup", "estado");
+  const statusEl = () => document.getElementById('sync-status');
+
+  let cloudReady = false;
+  let suppressNextEcho = false; // evita re-render redundante del propio guardado
+
+  onAuthStateChanged(auth, (user) => {
+    if(user){
+      cloudReady = true;
+      if(statusEl()) statusEl().textContent = '● en vivo';
+      if(statusEl()) statusEl().style.color = '#7fae8a';
+
+      // Escucha cambios en tiempo real (propios o de Mariano)
+      onSnapshot(estadoDocRef, (snap) => {
+        if(snap.exists()){
+          window.applyRemoteState(snap.data());
+        }
+      }, (err) => {
+        console.error('Error de sincronización:', err);
+        if(statusEl()) { statusEl().textContent = '● sin conexión'; statusEl().style.color = '#e08a75'; }
+      });
+    }
+  });
+
+  signInAnonymously(auth).catch((err) => {
+    console.error('No se pudo autenticar contra Firebase:', err);
+    if(statusEl()) { statusEl().textContent = '● error de acceso'; statusEl().style.color = '#e08a75'; }
+  });
+
+  // Expuesto globalmente para que saveState() (script clásico) pueda llamarlo
+  window.cloudSave = async function(state){
+    if(!cloudReady) return; // si todavía no autenticó, se guarda solo local y se sincroniza cuando conecte
+    try{
+      await setDoc(estadoDocRef, state);
+    }catch(e){
+      console.error('No se pudo guardar en la nube:', e);
+      if(statusEl()) { statusEl().textContent = '● error al guardar'; statusEl().style.color = '#e08a75'; }
+    }
+  };
 </script>
 </body>
 </html>
