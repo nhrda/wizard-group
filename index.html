@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wizard Group</title>
+<!-- PWA / Add to Home Screen -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#051721">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wizard Group">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#051822;
+    --slate:#2D383E;
+    --slate-2:#3A4750;
+    --umber:#7C5841;
+    --clay:#AA7452;
+    --steel:#969A9E;
+    --bone:#D4C9C7;
+    --bone-dim: rgba(212,201,199,0.55);
+    --line: rgba(150,154,158,0.22);
+    --radius: 14px;
+    --shadow: 0 20px 60px rgba(5,24,34,0.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background: var(--ink);
+    color: var(--bone);
+    font-family:'Inter', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  .display{ font-family:'Fraunces', serif; }
+
+  /* ---------- LOGIN ---------- */
+  #login-screen{
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    background-image:
+      linear-gradient(180deg, rgba(5,24,34,0.5), rgba(5,24,34,0.82) 65%, rgba(5,24,34,0.94)),
+      url('assets/login-wallpaper-desktop.jpg');
+    background-size:cover;
+    background-position:center;
+    overflow:hidden;
+  }
+  @media (max-width: 720px){
+    #login-screen{
+      background-image:
+        linear-gradient(180deg, rgba(5,24,34,0.45), rgba(5,24,34,0.8) 60%, rgba(5,24,34,0.95)),
+        url('assets/login-wallpaper-mobile.jpg');
+    }
+  }
+  .login-card{
+    position:relative; z-index:2;
+    width: min(380px, 90vw);
+    background: rgba(45,56,62,0.5);
+    border:1px solid rgba(150,154,158,0.3);
+    border-radius: var(--radius);
+    padding: 40px 32px 32px;
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow);
+  }
+  .login-eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color: var(--clay); margin-bottom:10px;
+  }
+  .login-title{
+    font-size:26px; font-weight:600; margin:0 0 28px;
+    color: var(--bone); letter-spacing:.01em;
+  }
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block; font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color: var(--steel); margin-bottom:6px; font-family:'IBM Plex Mono',monospace;
+  }
+  .field input, .field select, .field textarea{
+    width:100%; padding:12px 14px;
+    background: rgba(5,24,34,0.55);
+    border:1px solid var(--line);
+    border-radius:9px;
+    color: var(--bone);
+    font-size:14px; font-family:'Inter',sans-serif;
+    outline:none;
+    transition: border-color .15s ease;
+  }
+  .field textarea{ resize:vertical; min-height:70px; font-family:'Inter',sans-serif; }
+  .field input:focus, .field select:focus, .field textarea:focus{ border-color: var(--clay); }
+  .field input:disabled{
+    background: rgba(170,116,82,0.08); border-color: rgba(170,116,82,0.3);
+    color: var(--clay); cursor:not-allowed; font-weight:600;
+  }
+  .field input::placeholder, .field textarea::placeholder{ color: rgba(212,201,199,0.35); }
+  .field .req{ color: var(--clay); }
+  .btn{
+    width:100%; padding:13px 16px;
+    background: var(--clay);
+    color: var(--ink);
+    border:none; border-radius:9px;
+    font-size:14px; font-weight:600; letter-spacing:.02em;
+    cursor:pointer; font-family:'Inter',sans-serif;
+    transition: background .15s ease, transform .1s ease;
+  }
+  .btn:hover{ background:#bd8460; }
+  .btn:active{ transform: scale(.98); }
+  .btn-ghost{
+    background:transparent; border:1px solid var(--line); color:var(--bone);
+  }
+  .btn-ghost:hover{ background: rgba(150,154,158,0.08); }
+  .btn-sm{ width:auto; padding:8px 14px; font-size:12.5px; }
+  .btn-danger{ background: transparent; border:1px solid rgba(180,80,60,.4); color:#e08a75; }
+  .login-error{
+    color:#e08a75; font-size:12.5px; margin-top:-6px; margin-bottom:14px; display:none;
+  }
+  .login-ok{
+    color:#7fae8a; font-size:12.5px; margin-top:-6px; margin-bottom:14px; display:none;
+  }
+  .quick-agenda-btn{
+    position:fixed;
+    left:50%; bottom:48px; transform:translateX(-50%);
+    z-index:5;
+    display:flex; align-items:center; gap:9px;
+    padding:14px 26px;
+    background: rgba(45,56,62,0.55);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(212,201,199,0.28);
+    border-radius: 40px;
+    color: var(--bone);
+    font-family:'Inter',sans-serif; font-size:13.5px; font-weight:600; letter-spacing:.01em;
+    cursor:pointer;
+    box-shadow: 0 12px 32px rgba(5,24,34,0.5);
+    transition: all .18s ease;
+  }
+  .quick-agenda-btn:hover{
+    border-color: rgba(170,116,82,0.55);
+    background: rgba(45,56,62,0.72);
+    transform: translateX(-50%) translateY(-2px);
+  }
+  .quick-agenda-btn .dot{
+    width:7px; height:7px; border-radius:50%;
+    background: var(--clay);
+    box-shadow: 0 0 8px rgba(170,116,82,0.8);
+    flex-shrink:0;
+  }
+  @media (max-width: 480px){
+    .quick-agenda-btn{ bottom:36px; padding:13px 22px; font-size:13px; }
+  }
+
+  /* ---------- APP SHELL ---------- */
+  #app{ display:none; min-height:100vh; }
+  header.top{
+    position:sticky; top:0; z-index:10;
+    background: rgba(5,24,34,0.92);
+    backdrop-filter: blur(14px);
+    border-bottom:1px solid var(--line);
+    padding: 16px 24px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    flex-wrap:wrap;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand-mark{
+    width:34px; height:34px; border-radius:8px;
+    background: transparent;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .brand-mark img{
+    width:100%; height:100%; object-fit:contain;
+  }
+  .brand-name{ font-family:'Fraunces',serif; font-size:17px; font-weight:600; color:var(--bone); letter-spacing:.01em; }
+  .tabs{ display:flex; gap:4px; background: rgba(150,154,158,0.08); padding:4px; border-radius:10px; }
+  .tab-btn{
+    padding:9px 16px; border:none; background:transparent; color: var(--steel);
+    font-family:'Inter',sans-serif; font-size:13.5px; font-weight:600; cursor:pointer;
+    border-radius:7px; transition: all .15s ease;
+  }
+  .tab-btn.active{ background: var(--clay); color: var(--ink); }
+  .user-chip{ display:flex; align-items:center; gap:10px; }
+  .user-badge{
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color: var(--steel);
+    padding:6px 12px; border:1px solid var(--line); border-radius:20px;
+  }
+
+  main{ padding: 28px 24px 80px; max-width:1180px; margin:0 auto; }
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  .section-head{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    margin-bottom:20px; flex-wrap:wrap;
+  }
+  .section-title{ font-family:'Fraunces',serif; font-size:22px; font-weight:600; margin:0; }
+  .section-sub{ color: var(--steel); font-size:13px; margin-top:4px; }
+  .head-actions{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+
+  .pool-config{
+    display:flex; align-items:center; gap:8px;
+    font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--steel);
+    border:1px solid var(--line); padding:7px 12px; border-radius:20px;
+  }
+  .pool-config input{
+    width:44px; background:transparent; border:none; color:var(--clay);
+    font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:600; text-align:center;
+    outline:none; border-bottom:1px dashed var(--steel);
+  }
+
+  /* ---------- TREE (organizador) ---------- */
+  .tree{ display:flex; flex-direction:column; gap:10px; }
+  .node-wrap{ position:relative; }
+  .node-children{
+    margin-left:28px; padding-left:22px;
+    border-left:1px dashed rgba(150,154,158,0.3);
+    margin-top:10px; display:flex; flex-direction:column; gap:10px;
+  }
+  .node-card{
+    background: var(--slate);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:14px 16px;
+    transition: border-color .15s ease;
+  }
+  .node-card:hover{ border-color: rgba(170,116,82,0.4); }
+  .node-row{
+    display:flex; align-items:center; justify-content:flex-start; gap:16px; flex-wrap:nowrap;
+  }
+  .node-id{ display:flex; align-items:center; gap:10px; min-width:0; flex:1 1 auto; overflow:hidden; }
+  .node-avatar{
+    width:32px; height:32px; border-radius:8px; flex-shrink:0;
+    background: rgba(170,116,82,0.18); border:1px solid rgba(170,116,82,0.35);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces',serif; font-size:13px; color: var(--clay); font-weight:600;
+  }
+  .node-name{ font-weight:600; font-size:14.5px; color:var(--bone); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .node-meta{ font-size:11.5px; color: var(--steel); margin-top:1px; }
+  .node-points{ display:flex; gap:10px; align-items:center; flex:0 0 auto; }
+  .point-pill{
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px;
+    padding:5px 10px; border-radius:20px; border:1px solid var(--line);
+    display:flex; gap:6px; align-items:center; white-space:nowrap;
+  }
+  .point-pill .lbl{ color: var(--steel); }
+  .point-pill .val{ color: var(--clay); font-weight:600; }
+  .point-pill.wg{ border-color: rgba(170,116,82,0.45); background: rgba(170,116,82,0.08); }
+  .point-pill.referente{ border-color: rgba(150,154,158,0.35); }
+  .node-actions{ display:flex; gap:6px; }
+  .icon-btn{
+    width:28px; height:28px; border-radius:7px; border:1px solid var(--line);
+    background:transparent; color:var(--steel); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:14px;
+    transition: all .15s ease;
+  }
+  .icon-btn:hover{ border-color: var(--clay); color: var(--clay); }
+  .node-details{
+    margin-top:10px; padding-top:10px; border-top:1px solid var(--line);
+    font-size:12.5px; color: var(--bone-dim);
+    display:none; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:8px 20px;
+  }
+  .node-details.show{ display:grid; }
+  .node-details .d-label{ color:var(--steel); font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; letter-spacing:.06em; display:block; margin-bottom:2px;}
+  .contact-link{ color: var(--clay); text-decoration:none; border-bottom:1px dashed rgba(170,116,82,0.4); }
+  .contact-link:hover{ color:#bd8460; border-bottom-color:#bd8460; }
+
+  .empty-state{
+    border:1px dashed var(--line); border-radius:14px; padding:48px 24px;
+    text-align:center; color: var(--steel);
+  }
+  .empty-state .display{ color: var(--bone); font-size:18px; display:block; margin-bottom:8px;}
+
+  /* ---------- POLIZAS ---------- */
+  .poliza-table{ display:flex; flex-direction:column; gap:8px; }
+  .poliza-row{
+    background: var(--slate); border:1px solid var(--line); border-radius:12px;
+    padding:14px 16px; display:grid; grid-template-columns: 1.3fr 1.4fr 1fr 1fr auto; gap:14px; align-items:center;
+    cursor:pointer;
+  }
+  .poliza-row .col-label{ display:none; }
+  .p-asegurado{ font-weight:600; font-size:14px; color:var(--bone); }
+  .p-fecha-ingreso{ font-size:11px; color:var(--steel); margin-top:2px; }
+  .p-contacto{ font-size:12.5px; color: var(--bone-dim); line-height:1.5; }
+  .p-contacto .role-tag{ font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--steel); text-transform:uppercase; letter-spacing:.05em; }
+  .p-numero{ font-family:'IBM Plex Mono',monospace; font-size:13px; color: var(--clay); }
+  .p-venc{ font-size:13px; }
+  .p-venc.warn{ color:#e0a675; }
+  .p-venc.expired{ color:#e08a75; }
+  .poliza-head-row{
+    display:grid; grid-template-columns: 1.3fr 1.4fr 1fr 1fr auto; gap:14px;
+    padding: 0 16px 8px; font-family:'IBM Plex Mono',monospace; font-size:10.5px;
+    color: var(--steel); text-transform:uppercase; letter-spacing:.06em;
+  }
+
+  /* ---------- AGENDA ---------- */
+  .agenda-group-title{
+    font-family:'IBM Plex Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    color: var(--steel); margin: 28px 0 12px;
+  }
+  .agenda-group-title:first-child{ margin-top:0; }
+  .agenda-list{ display:flex; flex-direction:column; gap:8px; }
+  .agenda-row{
+    background: var(--slate); border:1px solid var(--line); border-radius:12px;
+    padding:14px 16px; display:flex; align-items:center; gap:16px; justify-content:space-between; flex-wrap:wrap;
+  }
+  .agenda-main{ flex:1; min-width:200px; }
+  .agenda-desarrollo{ font-size:14px; color:var(--bone); }
+  .agenda-fecha{ font-size:11.5px; color:var(--clay); font-family:'IBM Plex Mono',monospace; margin-top:3px; }
+  .agenda-row.done{ opacity:.6; }
+  .agenda-row.done .agenda-desarrollo{ text-decoration: line-through; color: var(--steel); }
+  .agenda-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .chip-btn{
+    display:flex; align-items:center; gap:6px;
+    padding:7px 13px; border-radius:20px; border:1px solid var(--line);
+    background:transparent; color:var(--bone-dim); font-size:12px; cursor:pointer;
+    font-family:'Inter',sans-serif; font-weight:600; transition: all .15s ease;
+  }
+  .chip-btn:hover{ border-color: var(--clay); color: var(--clay); }
+  .chip-btn.finalizar:hover{ border-color:#7fae8a; color:#7fae8a; }
+  .chip-btn.eliminar{ border-color: rgba(224,138,117,0.4); color:#e08a75; }
+  .chip-btn.eliminar:hover{ background: rgba(224,138,117,0.1); }
+
+  /* ---------- MODAL ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background: rgba(5,24,34,0.75); backdrop-filter: blur(4px);
+    display:none; align-items:center; justify-content:center; z-index:100; padding:20px;
+  }
+  .modal-overlay.show{ display:flex; }
+  .modal{
+    background: var(--slate); border:1px solid var(--line); border-radius: var(--radius);
+    width:min(560px,100%); max-height:88vh; overflow-y:auto; box-shadow: var(--shadow);
+  }
+  .modal.modal-sm{ width:min(400px,100%); }
+  .modal-head{
+    padding:20px 24px; border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .modal-head h3{ margin:0; font-family:'Fraunces',serif; font-size:18px; font-weight:600; }
+  .modal-body{ padding:20px 24px; overflow-x:hidden; }
+  .modal-foot{ padding:16px 24px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end; }
+  .multi-field{ margin-bottom:16px; }
+  .multi-field-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .multi-field-head label{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color: var(--steel); font-family:'IBM Plex Mono',monospace;}
+  .add-mini{ background:none; border:none; color:var(--clay); font-size:11.5px; cursor:pointer; font-family:'Inter',sans-serif; font-weight:600; }
+  .multi-row{ display:flex; gap:8px; margin-bottom:8px; }
+  .multi-row input, .multi-row select{ padding:10px 12px; background: rgba(5,24,34,0.5); border:1px solid var(--line); border-radius:8px; color:var(--bone); font-size:13px; outline:none; font-family:'Inter',sans-serif; }
+  .multi-row input{ flex:1.3; }
+  .multi-row select{ flex:1; }
+  .multi-row input:focus, .multi-row select:focus{ border-color: var(--clay); }
+  .multi-row .icon-btn{ flex-shrink:0; }
+  .direccion-row .dir-texto{ flex:1.5; }
+  .direccion-row .dir-localidad{ flex:1; }
+  .direccion-row .dir-jurisdiccion{ flex:1.2; }
+  @media (max-width: 600px){
+    .direccion-row{ flex-direction:column; }
+    .direccion-row .dir-texto, .direccion-row .dir-localidad, .direccion-row .dir-jurisdiccion{ flex:1 1 100%; width:100%; }
+  }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .points-hint{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--steel); margin-top:6px; padding:10px 12px; background:rgba(5,24,34,0.35); border-radius:8px; border:1px solid var(--line); }
+  .points-hint b{ color: var(--clay); }
+  .points-hint.err{ color:#e08a75; border-color: rgba(224,138,117,0.4); }
+
+  ::-webkit-scrollbar{ width:8px; height:8px;}
+  ::-webkit-scrollbar-thumb{ background: rgba(150,154,158,0.3); border-radius:4px;}
+
+  @media (max-width: 720px){
+    main{ padding:20px 16px 80px; }
+    .tabs{ order:3; width:100%; justify-content:center; overflow-x:auto; }
+    header.top{ padding:14px 16px; }
+    .node-row{ flex-direction:column; align-items:flex-start; }
+    .node-points{ width:100%; }
+    .poliza-row{ grid-template-columns:1fr; gap:6px; }
+    .poliza-head-row{ display:none; }
+    .poliza-row .col-label{ display:inline; color:var(--steel); font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase; margin-right:6px; }
+    .row2{ grid-template-columns:1fr; }
+    .node-children{ margin-left:14px; padding-left:14px; }
+    .agenda-row{ flex-direction:column; align-items:flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-eyebrow">Acceso privado</div>
+    <h1 class="login-title display">Wizard Group</h1>
+    <div class="field">
+      <label for="in-user">Usuario</label>
+      <input id="in-user" type="text" placeholder="Tu nombre" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="field">
+      <label for="in-pass">Clave</label>
+      <input id="in-pass" type="password" placeholder="••••••••" autocomplete="off">
+    </div>
+    <div class="login-error" id="login-error">Usuario o clave incorrectos.</div>
+    <button class="btn" onclick="attemptLogin()">Ingresar</button>
+  </div>
+  <button class="quick-agenda-btn" onclick="openQuickAgenda()"><span class="dot"></span>Agendar rápido</button>
+</div>
+
+<!-- ============ MODAL: AGENDA RÁPIDA (sin login) ============ -->
+<div class="modal-overlay" id="quickagenda-modal-overlay">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <h3>Agendar rápido</h3>
+      <button class="icon-btn" onclick="closeQuickAgenda()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Detalle</label>
+        <textarea id="quickagenda-desarrollo" placeholder="¿Qué hay que hacer?"></textarea>
+      </div>
+      <div class="field">
+        <label>Fecha</label>
+        <input type="date" id="quickagenda-fecha">
+      </div>
+      <div class="login-error" id="quickagenda-error">No se pudo guardar. Probá de nuevo en unos segundos.</div>
+      <div class="login-ok" id="quickagenda-ok">Guardado. Ya vas a verlo en Agenda al ingresar.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="closeQuickAgenda()">Cancelar</button>
+      <button class="btn btn-sm" onclick="saveQuickAgenda()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <header class="top">
+    <div class="brand">
+      <div class="brand-mark"><img src="icons/logo-header.png" alt="WG"></div>
+      <div class="brand-name">Wizard Group</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-view="organizador" onclick="switchView('organizador')">Organizador</button>
+      <button class="tab-btn" data-view="polizas" onclick="switchView('polizas')">Pólizas</button>
+      <button class="tab-btn" data-view="agenda" onclick="switchView('agenda')">Agenda</button>
+    </div>
+    <div class="user-chip">
+      <span class="user-badge mono" id="sync-status" style="border-color: rgba(150,154,158,0.22);">● conectando…</span>
+      <span class="user-badge mono" id="user-badge">—</span>
+      <button class="icon-btn" onclick="logout()" title="Salir">⏻</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ORGANIZADOR -->
+    <section class="view active" id="view-organizador">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Organizador</h2>
+          <div class="section-sub">Red de productores referidos y reparto de puntos</div>
+        </div>
+        <div class="head-actions">
+          <div class="pool-config mono">
+            Pool máximo: <input type="number" id="pool-max" value="10" min="1" max="100" onchange="onPoolChange()">
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="exportOrganizadorCSV()">⭳ Exportar Excel</button>
+          <button class="btn btn-sm" onclick="openNodeModal(null)">+ Agregar productor</button>
+        </div>
+      </div>
+      <div class="tree" id="tree-root"></div>
+    </section>
+
+    <!-- POLIZAS -->
+    <section class="view" id="view-polizas">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Pólizas</h2>
+          <div class="section-sub">Seguimiento de cartera propia</div>
+        </div>
+        <div class="head-actions">
+          <button class="btn btn-ghost btn-sm" onclick="exportPolizasCSV()">⭳ Exportar Excel</button>
+          <button class="btn btn-sm" onclick="openPolizaModal(null)">+ Agregar póliza</button>
+        </div>
+      </div>
+      <div class="poliza-head-row">
+        <div>Asegurado</div><div>Contacto</div><div>Póliza</div><div>Vencimiento</div><div></div>
+      </div>
+      <div class="poliza-table" id="poliza-table"></div>
+    </section>
+
+    <!-- AGENDA -->
+    <section class="view" id="view-agenda">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Agenda</h2>
+          <div class="section-sub">Tareas y pendientes con seguimiento</div>
+        </div>
+        <div class="head-actions">
+          <button class="btn btn-sm" onclick="openAgendaModal()">+ Agregar evento</button>
+        </div>
+      </div>
+      <div class="agenda-group-title">Próximos</div>
+      <div class="agenda-list" id="agenda-activos"></div>
+      <div class="agenda-group-title">Finalizados</div>
+      <div class="agenda-list" id="agenda-finalizados"></div>
+    </section>
+  </main>
+</div>
+
+<!-- ============ MODAL: NODO ORGANIZADOR ============ -->
+<div class="modal-overlay" id="node-modal-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="node-modal-title">Agregar productor</h3>
+      <button class="icon-btn" onclick="closeNodeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="row2">
+        <div class="field">
+          <label>Nombre</label>
+          <input type="text" id="node-nombre" placeholder="Nombre y apellido, o razón social">
+        </div>
+        <div class="field">
+          <label>Rol</label>
+          <select id="node-rol" onchange="toggleRolOtro()">
+            <option value="Productor">Productor</option>
+            <option value="Organizador">Organizador</option>
+            <option value="Otro">Otro</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" id="node-rol-otro-wrap" style="display:none;">
+        <label>Especificar rol</label>
+        <input type="text" id="node-rol-otro" placeholder="Describilo brevemente">
+      </div>
+
+      <div class="multi-field">
+        <div class="multi-field-head"><label>Email</label><button class="add-mini" onclick="addSimpleRow('node-emails','email','ejemplo@correo.com')">+ agregar</button></div>
+        <div id="node-emails"></div>
+      </div>
+      <div class="multi-field">
+        <div class="multi-field-head"><label>Teléfono</label><button class="add-mini" onclick="addSimpleRow('node-telefonos','tel','11-XXXX-XXXX')">+ agregar</button></div>
+        <div id="node-telefonos"></div>
+      </div>
+      <div class="multi-field">
+        <div class="multi-field-head"><label>Dirección</label><button class="add-mini" onclick="addDireccionRow()">+ agregar</button></div>
+        <div id="node-direcciones"></div>
+      </div>
+
+      <div class="field">
+        <label>Fecha de ingreso</label>
+        <input type="date" id="node-fecha">
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label>Puntos WG</label>
+          <input type="number" id="node-wg" min="0" oninput="updatePointsHint()">
+        </div>
+        <div class="field">
+          <label>Puntos ingresante</label>
+          <input type="number" id="node-ingresante" min="0" oninput="updatePointsHint()">
+        </div>
+      </div>
+      <div class="points-hint" id="points-hint"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="node-delete-btn" style="display:none;" onclick="deleteCurrentNode()">Eliminar</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-ghost btn-sm" onclick="closeNodeModal()">Cancelar</button>
+      <button class="btn btn-sm" onclick="saveNode()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: POLIZA ============ -->
+<div class="modal-overlay" id="poliza-modal-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="poliza-modal-title">Agregar póliza</h3>
+      <button class="icon-btn" onclick="closePolizaModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Asegurado</label>
+        <input type="text" id="poliza-asegurado" placeholder="Nombre del asegurado">
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Contacto <span style="color:var(--steel); text-transform:none; letter-spacing:0;">(opcional)</span></label>
+          <input type="text" id="poliza-contacto" placeholder="Nombre, relación, referencia libre">
+        </div>
+        <div class="field">
+          <label>Rol <span style="color:var(--steel); text-transform:none; letter-spacing:0;">(opcional)</span></label>
+          <input type="text" id="poliza-rol" placeholder="Titular, cónyuge, etc.">
+        </div>
+      </div>
+      <div class="multi-field">
+        <div class="multi-field-head"><label>Email de contacto</label><button class="add-mini" onclick="addSimpleRow('poliza-emails','email','ejemplo@correo.com',3)">+ agregar</button></div>
+        <div id="poliza-emails"></div>
+      </div>
+      <div class="multi-field">
+        <div class="multi-field-head"><label>Teléfono de contacto</label><button class="add-mini" onclick="addSimpleRow('poliza-telefonos','tel','11-XXXX-XXXX',3)">+ agregar</button></div>
+        <div id="poliza-telefonos"></div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Número de póliza</label>
+          <input type="text" id="poliza-numero" placeholder="000-0000000">
+        </div>
+        <div class="field">
+          <label>Vencimiento <span class="req">*</span></label>
+          <input type="date" id="poliza-vencimiento">
+        </div>
+      </div>
+      <div class="field">
+        <label>Fecha de ingreso <span class="req">*</span></label>
+        <input type="date" id="poliza-fecha">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-danger btn-sm" id="poliza-delete-btn" style="display:none;" onclick="deleteCurrentPoliza()">Eliminar</button>
+      <div style="flex:1"></div>
+      <button class="btn btn-ghost btn-sm" onclick="closePolizaModal()">Cancelar</button>
+      <button class="btn btn-sm" onclick="savePoliza()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: AGENDA ============ -->
+<div class="modal-overlay" id="agenda-modal-overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Agregar evento</h3>
+      <button class="icon-btn" onclick="closeAgendaModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Desarrollo</label>
+        <textarea id="agenda-desarrollo" placeholder="¿Qué hay que hacer?"></textarea>
+      </div>
+      <div class="field">
+        <label>Fecha de realización</label>
+        <input type="date" id="agenda-fecha">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="closeAgendaModal()">Cancelar</button>
+      <button class="btn btn-sm" onclick="saveAgenda()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: POSPONER EVENTO ============ -->
+<div class="modal-overlay" id="postpone-modal-overlay">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <h3>Nueva fecha</h3>
+      <button class="icon-btn" onclick="closePostponeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Fecha de realización</label>
+        <input type="date" id="postpone-fecha">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="closePostponeModal()">Cancelar</button>
+      <button class="btn btn-sm" onclick="confirmPostpone()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   AUTH
+   ========================================================= */
+const VALID_USERS = ['nico','marianito'];
+const VALID_PASS = 'kamehouse1234';
+let currentUser = null;
+
+function attemptLogin(){
+  const u = document.getElementById('in-user').value.trim().toLowerCase();
+  const p = document.getElementById('in-pass').value.trim().toLowerCase();
+  const err = document.getElementById('login-error');
+  if(VALID_USERS.includes(u) && p === VALID_PASS){
+    currentUser = u === 'nico' ? 'Nico' : 'Marianito';
+    err.style.display='none';
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('user-badge').textContent = currentUser;
+    loadState();
+    renderTree();
+    renderPolizas();
+    renderAgenda();
+  } else {
+    err.style.display='block';
+  }
+}
+function logout(){
+  currentUser = null;
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('in-user').value='';
+  document.getElementById('in-pass').value='';
+}
+document.getElementById('in-pass').addEventListener('keydown', e=>{ if(e.key==='Enter') attemptLogin(); });
+
+/* =========================================================
+   VIEW SWITCH
+   ========================================================= */
+function switchView(view){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+}
+
+/* =========================================================
+   JURISDICCIONES
+   ========================================================= */
+const JURISDICCIONES = [
+  "CABA","Buenos Aires","Catamarca","Chaco","Chubut","Córdoba",
+  "Corrientes","Entre Ríos","Formosa","Jujuy","La Pampa","La Rioja","Mendoza","Misiones",
+  "Neuquén","Río Negro","Salta","San Juan","San Luis","Santa Cruz","Santa Fe",
+  "Santiago del Estero","Tierra del Fuego","Tucumán"
+];
+function jurisdiccionOptions(selected){
+  return '<option value="">Seleccionar provincia</option>' + JURISDICCIONES.map(j=>
+    `<option value="${j}" ${j===selected?'selected':''}>${j}</option>`).join('');
+}
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let maxPool = 10;
+let tree = [];
+let polizas = [];
+let agenda = [];
+
+function uid(){ return 'id-'+Math.random().toString(36).slice(2,10)+Date.now().toString(36); }
+
+function saveState(){
+  try{
+    localStorage.setItem('wg_maxPool', String(maxPool));
+    localStorage.setItem('wg_tree', JSON.stringify(tree));
+    localStorage.setItem('wg_polizas', JSON.stringify(polizas));
+    localStorage.setItem('wg_agenda', JSON.stringify(agenda));
+  }catch(e){ console.warn('No se pudo guardar localmente', e); }
+  // Sincroniza a Firestore si ya está listo (ver script type=module al final del archivo)
+  if(window.cloudSave){
+    window.cloudSave({ maxPool, tree, polizas, agenda });
+  }
+}
+function loadState(){
+  // Carga inmediata desde caché local (offline-first), SOLO si todavía no llegó
+  // el dato real de Firestore. Si ya llegó (window.__cloudDataReceived === true),
+  // no lo pisamos con una copia vieja guardada en este dispositivo.
+  if(window.__cloudDataReceived) return;
+  try{
+    const mp = localStorage.getItem('wg_maxPool');
+    if(mp) { maxPool = parseInt(mp,10); document.getElementById('pool-max').value = maxPool; }
+    tree = JSON.parse(localStorage.getItem('wg_tree') || '[]');
+    polizas = JSON.parse(localStorage.getItem('wg_polizas') || '[]');
+    agenda = JSON.parse(localStorage.getItem('wg_agenda') || '[]');
+  }catch(e){ console.warn('No se pudo cargar estado local', e); }
+}
+// Llamado desde el script de Firebase cuando llega un cambio remoto (propio o de Mariano)
+function applyRemoteState(data){
+  window.__cloudDataReceived = true;
+  maxPool = data.maxPool || 10;
+  tree = data.tree || [];
+  polizas = data.polizas || [];
+  agenda = data.agenda || [];
+  const poolInput = document.getElementById('pool-max');
+  if(poolInput) poolInput.value = maxPool;
+  if(document.getElementById('app').style.display !== 'none'){
+    renderTree(); renderPolizas(); renderAgenda();
+  }
+}
+function onPoolChange(){
+  maxPool = parseInt(document.getElementById('pool-max').value,10) || 10;
+  saveState();
+  renderTree();
+}
+
+/* =========================================================
+   SIMPLE MULTI FIELD (email / telefono)
+   ========================================================= */
+function addSimpleRow(containerId, type, placeholder, max){
+  max = max || 4;
+  const container = document.getElementById(containerId);
+  if(container.children.length >= max) return;
+  const row = document.createElement('div');
+  row.className='multi-row';
+  row.innerHTML = `<input type="text" placeholder="${placeholder}" data-type="${type}">
+    <button class="icon-btn" onclick="this.parentElement.remove()">✕</button>`;
+  container.appendChild(row);
+}
+function getSimpleValues(containerId){
+  return Array.from(document.getElementById(containerId).querySelectorAll('input'))
+    .map(i=>i.value.trim()).filter(v=>v.length>0);
+}
+function setSimpleValues(containerId, values, type, placeholder, max){
+  const container = document.getElementById(containerId);
+  container.innerHTML='';
+  if(!values || values.length===0){ addSimpleRow(containerId, type, placeholder, max); return; }
+  values.forEach(v=>{
+    addSimpleRow(containerId, type, placeholder, max);
+    const inputs = container.querySelectorAll('input');
+    inputs[inputs.length-1].value = v;
+  });
+}
+
+/* =========================================================
+   DIRECCION MULTI FIELD (texto + jurisdicción)
+   ========================================================= */
+function addDireccionRow(texto, localidad, jurisdiccion){
+  const container = document.getElementById('node-direcciones');
+  if(container.children.length >= 4) return;
+  const row = document.createElement('div');
+  row.className='multi-row direccion-row';
+  row.innerHTML = `<input type="text" placeholder="Calle y número" value="${texto?escapeAttr(texto):''}" class="dir-texto">
+    <input type="text" placeholder="Localidad" value="${localidad?escapeAttr(localidad):''}" class="dir-localidad">
+    <select class="dir-jurisdiccion">${jurisdiccionOptions(jurisdiccion||'')}</select>
+    <button class="icon-btn" onclick="this.parentElement.remove()">✕</button>`;
+  container.appendChild(row);
+}
+function getDireccionValues(){
+  return Array.from(document.getElementById('node-direcciones').children).map(row=>{
+    const texto = row.querySelector('.dir-texto').value.trim();
+    const localidad = row.querySelector('.dir-localidad').value.trim();
+    const jurisdiccion = row.querySelector('.dir-jurisdiccion').value;
+    return {texto, localidad, jurisdiccion};
+  }).filter(d=>d.texto || d.localidad || d.jurisdiccion);
+}
+function setDireccionValues(list){
+  const container = document.getElementById('node-direcciones');
+  container.innerHTML='';
+  if(!list || list.length===0){ addDireccionRow('','',''); return; }
+  list.forEach(d=>addDireccionRow(d.texto, d.localidad, d.jurisdiccion));
+}
+function escapeAttr(s){ return String(s).replace(/"/g,'&quot;'); }
+function mailtoLink(email){
+  return `<a href="mailto:${escapeAttr(email)}" class="contact-link" onclick="event.stopPropagation()">${escapeHtml(email)}</a>`;
+}
+function telLink(tel){
+  const clean = tel.replace(/[^\d+]/g,''); // deja solo dígitos y el "+" si existe
+  return `<a href="tel:${escapeAttr(clean)}" class="contact-link" onclick="event.stopPropagation()">${escapeHtml(tel)}</a>`;
+}
+
+function validateEmail(v){ return v.includes('@'); }
+
+/* =========================================================
+   ROL "OTRO" toggle
+   ========================================================= */
+function toggleRolOtro(){
+  const isOtro = document.getElementById('node-rol').value === 'Otro';
+  document.getElementById('node-rol-otro-wrap').style.display = isOtro ? 'block' : 'none';
+}
+
+/* =========================================================
+   NODE MODAL (organizador)
+   ========================================================= */
+let nodeModalParentId = null;
+let nodeModalEditingId = null;
+
+function findNode(id, list){
+  list = list || tree;
+  for(const n of list){
+    if(n.id===id) return n;
+    const found = findNode(id, n.children);
+    if(found) return found;
+  }
+  return null;
+}
+function findParentOf(id, list, parent){
+  list = list || tree;
+  for(const n of list){
+    if(n.id===id) return parent;
+    const found = findParentOf(id, n.children, n);
+    if(found !== undefined && found !== null) return found;
+  }
+  return null;
+}
+// Sube hasta el nodo raíz de la rama (el que negoció el WG fijo original) y devuelve ese nodo
+function getRootAncestor(id){
+  let current = findNode(id);
+  if(!current) return null;
+  let parent = findParentOf(id);
+  while(parent){
+    current = parent;
+    parent = findParentOf(parent.id);
+  }
+  return current;
+}
+// WG heredado para un nodo que va a colgar de parentId (o para reevaluar un nodo existente)
+function getInheritedWG(parentId){
+  const root = getRootAncestor(parentId);
+  return root ? root.wg : 0;
+}
+
+function openNodeModal(parentId, editId){
+  nodeModalParentId = parentId || null;
+  nodeModalEditingId = editId || null;
+  const isEdit = !!editId;
+  document.getElementById('node-modal-title').textContent = isEdit ? 'Editar' : (parentId ? 'Agregar referido' : 'Agregar productor directo');
+  document.getElementById('node-delete-btn').style.display = isEdit ? 'inline-block' : 'none';
+
+  // ¿Este nodo cuelga de una rama (tiene padre, en cualquier nivel)?
+  let effectiveParentId = parentId;
+  if(isEdit && !effectiveParentId){
+    const p = findParentOf(editId);
+    effectiveParentId = p ? p.id : null;
+  }
+  const hasParent = !!effectiveParentId;
+  const wgInput = document.getElementById('node-wg');
+
+  let data = { nombre:'', rol:'Productor', rolOtro:'', emails:[], telefonos:[], direcciones:[], fecha:'', wg: hasParent?getInheritedWG(effectiveParentId):6, ingresante:4 };
+  if(isEdit){
+    const n = findNode(editId);
+    if(n) data = n;
+  }
+  document.getElementById('node-nombre').value = data.nombre;
+  document.getElementById('node-rol').value = data.rol;
+  document.getElementById('node-rol-otro').value = data.rolOtro || '';
+  toggleRolOtro();
+  document.getElementById('node-fecha').value = data.fecha || '';
+
+  if(hasParent){
+    const inherited = getInheritedWG(effectiveParentId);
+    wgInput.value = inherited;
+    wgInput.disabled = true;
+  } else {
+    wgInput.value = data.wg;
+    wgInput.disabled = false;
+  }
+  document.getElementById('node-ingresante').value = data.ingresante;
+  setSimpleValues('node-emails', data.emails, 'email', 'ejemplo@correo.com');
+  setSimpleValues('node-telefonos', data.telefonos, 'tel', '11-XXXX-XXXX');
+  setDireccionValues(data.direcciones);
+  updatePointsHint();
+  document.getElementById('node-modal-overlay').classList.add('show');
+}
+function closeNodeModal(){
+  document.getElementById('node-modal-overlay').classList.remove('show');
+}
+function updatePointsHint(){
+  const wg = parseInt(document.getElementById('node-wg').value,10) || 0;
+  const ing = parseInt(document.getElementById('node-ingresante').value,10) || 0;
+  const hasParent = !!nodeModalParentId || (nodeModalEditingId && findParentOf(nodeModalEditingId));
+  const referente = maxPool - wg - ing;
+  const hint = document.getElementById('points-hint');
+  if(referente < 0){
+    hint.classList.add('err');
+    hint.innerHTML = hasParent
+      ? `Te pasaste del pool disponible en esta rama. Ingresante no puede superar <b>${maxPool - wg}</b> (${maxPool} - ${wg} de WG ya fijado).`
+      : `Te pasaste del pool. WG + Ingresante no puede superar <b>${maxPool}</b>.`;
+  } else {
+    hint.classList.remove('err');
+    if(hasParent){
+      hint.innerHTML = `WG fijo heredado de la rama: <b>${wg}</b> — Pool disponible para negociar acá: <b>${maxPool - wg}</b> — Puntos Referente (van a quien lo trajo): <b>${referente}</b>`;
+    } else {
+      hint.innerHTML = `Captación directa: este WG (<b>${wg}</b>) queda fijo para toda la rama que salga de acá. Sobrante sin asignar: <b>${referente}</b> — Pool total: ${maxPool}`;
+    }
+  }
+}
+function saveNode(){
+  const wg = parseInt(document.getElementById('node-wg').value,10) || 0;
+  const ing = parseInt(document.getElementById('node-ingresante').value,10) || 0;
+  const referente = maxPool - wg - ing;
+  if(referente < 0){
+    const hasParent = !!nodeModalParentId || (nodeModalEditingId && findParentOf(nodeModalEditingId));
+    alert(hasParent
+      ? 'Ingresante supera el pool disponible en esta rama ('+(maxPool-wg)+' puntos).'
+      : 'WG + Ingresante supera el pool máximo de '+maxPool+' puntos.');
+    return;
+  }
+  const nombre = document.getElementById('node-nombre').value.trim();
+  if(!nombre){ alert('El nombre es obligatorio.'); return; }
+
+  const emails = getSimpleValues('node-emails');
+  for(const e of emails){ if(!validateEmail(e)){ alert('Email inválido: '+e+' (debe contener @)'); return; } }
+  const telefonos = getSimpleValues('node-telefonos');
+  const rol = document.getElementById('node-rol').value;
+  const rolOtro = rol==='Otro' ? document.getElementById('node-rol-otro').value.trim() : '';
+
+  const payload = {
+    nombre, rol, rolOtro,
+    emails, telefonos,
+    direcciones: getDireccionValues(),
+    fecha: document.getElementById('node-fecha').value,
+    wg, ingresante: ing, referente
+  };
+
+  if(nodeModalEditingId){
+    const n = findNode(nodeModalEditingId);
+    Object.assign(n, payload);
+  } else {
+    const node = { id: uid(), children: [], ...payload };
+    if(nodeModalParentId){
+      const parent = findNode(nodeModalParentId);
+      parent.children.push(node);
+    } else {
+      tree.push(node);
+    }
+  }
+  saveState();
+  closeNodeModal();
+  renderTree();
+}
+function deleteCurrentNode(){
+  if(!nodeModalEditingId) return;
+  if(!confirm('¿Eliminar este productor y toda su rama de referidos?')) return;
+  function removeFrom(list){
+    const idx = list.findIndex(n=>n.id===nodeModalEditingId);
+    if(idx>-1){ list.splice(idx,1); return true; }
+    for(const n of list){ if(removeFrom(n.children)) return true; }
+    return false;
+  }
+  removeFrom(tree);
+  saveState();
+  closeNodeModal();
+  renderTree();
+}
+
+/* =========================================================
+   RENDER TREE
+   ========================================================= */
+function initials(name){
+  return name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+}
+function renderTree(){
+  const root = document.getElementById('tree-root');
+  if(tree.length===0){
+    root.innerHTML = `<div class="empty-state">
+      <span class="display">Todavía no hay productores cargados</span>
+      Empezá agregando una captación directa — el resto de la red se construye referido por referido.
+    </div>`;
+    return;
+  }
+  root.innerHTML = tree.map(n=>renderNode(n, n.wg)).join('');
+}
+function renderNode(n, inheritedWG){
+  const hasChildren = n.children && n.children.length>0;
+  const rolDisplay = n.rol === 'Otro' && n.rolOtro ? n.rolOtro : n.rol;
+  const wgDisplay = inheritedWG;
+  const pool = maxPool - wgDisplay;
+  const referenteDisplay = pool - n.ingresante;
+  const contactBits = [];
+  if(n.emails?.length) contactBits.push(`<div><span class="d-label">Email</span>${n.emails.map(mailtoLink).join(' · ')}</div>`);
+  if(n.telefonos?.length) contactBits.push(`<div><span class="d-label">Teléfono</span>${n.telefonos.map(telLink).join(' · ')}</div>`);
+  if(n.direcciones?.length) contactBits.push(`<div><span class="d-label">Dirección</span>${n.direcciones.map(d=>{
+    const partes = [d.texto, d.localidad, d.jurisdiccion].filter(Boolean);
+    return partes.join(', ');
+  }).join(' · ')}</div>`);
+  if(n.fecha) contactBits.push(`<div><span class="d-label">Fecha de ingreso</span>${formatDate(n.fecha)}</div>`);
+  contactBits.push(`<div><span class="d-label">Rol</span>${escapeHtml(rolDisplay)}</div>`);
+
+  return `
+  <div class="node-wrap">
+    <div class="node-card">
+      <div class="node-row">
+        <div class="node-id" onclick="toggleDetails('${n.id}')" style="cursor:pointer;">
+          <div class="node-avatar">${initials(n.nombre)}</div>
+          <div>
+            <div class="node-name">${escapeHtml(n.nombre)}</div>
+            <div class="node-meta">${escapeHtml(rolDisplay)}${hasChildren? ' · '+n.children.length+' referido'+(n.children.length>1?'s':'') : ''}</div>
+          </div>
+        </div>
+        <div class="node-points mono">
+          <span class="point-pill wg"><span class="lbl">WG</span><span class="val">${wgDisplay}</span></span>
+          <span class="point-pill referente"><span class="lbl">Referente</span><span class="val">${referenteDisplay}</span></span>
+          <span class="point-pill"><span class="lbl">Ingresante</span><span class="val">${n.ingresante}</span></span>
+        </div>
+        <div class="node-actions">
+          <button class="icon-btn" title="Agregar referido" onclick="openNodeModal('${n.id}')">+</button>
+          <button class="icon-btn" title="Editar" onclick="openNodeModal(null,'${n.id}')">✎</button>
+        </div>
+      </div>
+      <div class="node-details" id="details-${n.id}">
+        ${contactBits.join('')}
+      </div>
+    </div>
+    ${hasChildren ? `<div class="node-children">${n.children.map(c=>renderNode(c, inheritedWG)).join('')}</div>` : ''}
+  </div>`;
+}
+function toggleDetails(id){
+  document.getElementById('details-'+id).classList.toggle('show');
+}
+function escapeHtml(s){
+  const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML;
+}
+
+/* =========================================================
+   POLIZAS
+   ========================================================= */
+let polizaEditingId = null;
+function openPolizaModal(id){
+  polizaEditingId = id || null;
+  document.getElementById('poliza-modal-title').textContent = id ? 'Editar póliza' : 'Agregar póliza';
+  document.getElementById('poliza-delete-btn').style.display = id ? 'inline-block' : 'none';
+  let data = { asegurado:'', contacto:'', rol:'', emails:[], telefonos:[], numero:'', vencimiento:'', fecha:'' };
+  if(id){ const p = polizas.find(x=>x.id===id); if(p) data = p; }
+  document.getElementById('poliza-asegurado').value = data.asegurado;
+  document.getElementById('poliza-contacto').value = data.contacto || '';
+  document.getElementById('poliza-rol').value = data.rol || '';
+  document.getElementById('poliza-numero').value = data.numero;
+  document.getElementById('poliza-vencimiento').value = data.vencimiento;
+  document.getElementById('poliza-fecha').value = data.fecha;
+  setSimpleValues('poliza-emails', data.emails, 'email', 'ejemplo@correo.com', 3);
+  setSimpleValues('poliza-telefonos', data.telefonos, 'tel', '11-XXXX-XXXX', 3);
+  document.getElementById('poliza-modal-overlay').classList.add('show');
+}
+function closePolizaModal(){ document.getElementById('poliza-modal-overlay').classList.remove('show'); }
+function savePoliza(){
+  const asegurado = document.getElementById('poliza-asegurado').value.trim();
+  if(!asegurado){ alert('El nombre del asegurado es obligatorio.'); return; }
+  const vencimiento = document.getElementById('poliza-vencimiento').value;
+  const fecha = document.getElementById('poliza-fecha').value;
+  if(!fecha){ alert('La fecha de ingreso es obligatoria.'); return; }
+  if(!vencimiento){ alert('La fecha de vencimiento es obligatoria.'); return; }
+  const emails = getSimpleValues('poliza-emails');
+  for(const e of emails){ if(!validateEmail(e)){ alert('Email inválido: '+e); return; } }
+  const payload = {
+    asegurado,
+    contacto: document.getElementById('poliza-contacto').value.trim(),
+    rol: document.getElementById('poliza-rol').value.trim(),
+    emails, telefonos: getSimpleValues('poliza-telefonos'),
+    numero: document.getElementById('poliza-numero').value.trim(),
+    vencimiento, fecha
+  };
+  if(polizaEditingId){
+    const p = polizas.find(x=>x.id===polizaEditingId);
+    Object.assign(p, payload);
+  } else {
+    polizas.push({ id: uid(), ...payload });
+  }
+  saveState();
+  closePolizaModal();
+  renderPolizas();
+}
+function deleteCurrentPoliza(){
+  if(!polizaEditingId) return;
+  if(!confirm('¿Eliminar esta póliza?')) return;
+  polizas = polizas.filter(p=>p.id!==polizaEditingId);
+  saveState();
+  closePolizaModal();
+  renderPolizas();
+}
+function formatDate(d){
+  if(!d) return '—';
+  const [y,m,day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+function vencimientoClass(d){
+  if(!d) return '';
+  const diff = (new Date(d) - new Date()) / (1000*60*60*24);
+  if(diff < 0) return 'expired';
+  if(diff < 30) return 'warn';
+  return '';
+}
+function renderPolizas(){
+  const table = document.getElementById('poliza-table');
+  if(polizas.length===0){
+    table.innerHTML = `<div class="empty-state">
+      <span class="display">Sin pólizas cargadas</span>
+      Agregá la primera para empezar a hacer seguimiento de vencimientos.
+    </div>`;
+    return;
+  }
+  table.innerHTML = polizas.map(p=>`
+    <div class="poliza-row" onclick="openPolizaModal('${p.id}')">
+      <div>
+        <div class="col-label">Asegurado</div>
+        <div class="p-asegurado">${escapeHtml(p.asegurado)}</div>
+        ${p.fecha ? `<div class="p-fecha-ingreso">Ingresó ${formatDate(p.fecha)}</div>`:''}
+      </div>
+      <div>
+        <div class="col-label">Contacto</div>
+        <div class="p-contacto">
+          ${p.contacto ? escapeHtml(p.contacto)+(p.rol?` <span class="role-tag">(${escapeHtml(p.rol)})</span>`:'')+'<br>' : (p.rol ? `<span class="role-tag">${escapeHtml(p.rol)}</span><br>` : '')}
+          ${(p.emails||[]).map(mailtoLink).join(' · ')}${p.emails?.length && p.telefonos?.length ? '<br>':''}${(p.telefonos||[]).map(telLink).join(' · ')}
+        </div>
+      </div>
+      <div>
+        <div class="col-label">Póliza</div>
+        <div class="p-numero">${escapeHtml(p.numero || '—')}</div>
+      </div>
+      <div>
+        <div class="col-label">Vencimiento</div>
+        <div class="p-venc ${vencimientoClass(p.vencimiento)}">${formatDate(p.vencimiento)}</div>
+      </div>
+      <div></div>
+    </div>
+  `).join('');
+}
+
+/* =========================================================
+   AGENDA
+   ========================================================= */
+function openAgendaModal(){
+  document.getElementById('agenda-desarrollo').value = '';
+  document.getElementById('agenda-fecha').value = '';
+  document.getElementById('agenda-modal-overlay').classList.add('show');
+}
+function closeAgendaModal(){ document.getElementById('agenda-modal-overlay').classList.remove('show'); }
+function saveAgenda(){
+  const desarrollo = document.getElementById('agenda-desarrollo').value.trim();
+  const fecha = document.getElementById('agenda-fecha').value;
+  if(!desarrollo){ alert('Describí qué hay que hacer.'); return; }
+  if(!fecha){ alert('Elegí una fecha de realización.'); return; }
+  agenda.push({ id: uid(), desarrollo, fecha, estado:'activo' });
+  saveState();
+  closeAgendaModal();
+  renderAgenda();
+}
+let postponeEditingId = null;
+
+/* =========================================================
+   AGENDA RÁPIDA — sin necesidad de login
+   ========================================================= */
+function todayISO(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function openQuickAgenda(){
+  document.getElementById('quickagenda-desarrollo').value = '';
+  document.getElementById('quickagenda-fecha').value = todayISO();
+  document.getElementById('quickagenda-error').style.display = 'none';
+  document.getElementById('quickagenda-ok').style.display = 'none';
+  document.getElementById('quickagenda-modal-overlay').classList.add('show');
+}
+function closeQuickAgenda(){
+  document.getElementById('quickagenda-modal-overlay').classList.remove('show');
+}
+function saveQuickAgenda(){
+  const desarrollo = document.getElementById('quickagenda-desarrollo').value.trim();
+  const fecha = document.getElementById('quickagenda-fecha').value || todayISO();
+  const errEl = document.getElementById('quickagenda-error');
+  const okEl = document.getElementById('quickagenda-ok');
+  errEl.style.display='none'; okEl.style.display='none';
+  if(!desarrollo){ alert('Escribí qué hay que hacer.'); return; }
+
+  if(!window.__cloudDataReceived){
+    // todavía no llegó el estado real de la nube — no arriesgamos a pisar datos, avisamos y no guardamos
+    errEl.textContent = 'Conectando todavía… esperá 2 o 3 segundos y volvé a tocar Guardar.';
+    errEl.style.display='block';
+    return;
+  }
+
+  agenda.push({ id: uid(), desarrollo, fecha, estado:'activo' });
+  saveState();
+  okEl.style.display='block';
+  document.getElementById('quickagenda-desarrollo').value = '';
+  setTimeout(closeQuickAgenda, 1200);
+}
+
+function openPostponeModal(id){
+  postponeEditingId = id;
+  const ev = agenda.find(e=>e.id===id);
+  document.getElementById('postpone-fecha').value = ev.fecha;
+  document.getElementById('postpone-modal-overlay').classList.add('show');
+}
+function closePostponeModal(){ document.getElementById('postpone-modal-overlay').classList.remove('show'); }
+function confirmPostpone(){
+  const nueva = document.getElementById('postpone-fecha').value;
+  if(!nueva){ alert('Elegí una fecha.'); return; }
+  const ev = agenda.find(e=>e.id===postponeEditingId);
+  ev.fecha = nueva;
+  saveState();
+  closePostponeModal();
+  renderAgenda();
+}
+function finalizarEvento(id){
+  const ev = agenda.find(e=>e.id===id);
+  ev.estado = 'finalizado';
+  saveState();
+  renderAgenda();
+}
+function reabrirEvento(id){
+  const ev = agenda.find(e=>e.id===id);
+  ev.estado = 'activo';
+  saveState();
+  renderAgenda();
+}
+function eliminarEvento(id){
+  if(!confirm('¿Eliminar este evento definitivamente?')) return;
+  agenda = agenda.filter(e=>e.id!==id);
+  saveState();
+  renderAgenda();
+}
+function renderAgenda(){
+  const activos = agenda.filter(e=>e.estado==='activo').sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const finalizados = agenda.filter(e=>e.estado==='finalizado');
+
+  const elActivos = document.getElementById('agenda-activos');
+  elActivos.innerHTML = activos.length ? activos.map(ev=>`
+    <div class="agenda-row">
+      <div class="agenda-main">
+        <div class="agenda-desarrollo">${escapeHtml(ev.desarrollo)}</div>
+        <div class="agenda-fecha">${formatDate(ev.fecha)}</div>
+      </div>
+      <div class="agenda-actions">
+        <button class="chip-btn" onclick="openPostponeModal('${ev.id}')">⏳ Posponer</button>
+        <button class="chip-btn finalizar" onclick="finalizarEvento('${ev.id}')">✓ Finalizado</button>
+      </div>
+    </div>
+  `).join('') : `<div class="empty-state"><span class="display">Sin eventos pendientes</span>Agregá el primero para empezar a hacer seguimiento.</div>`;
+
+  const elFinalizados = document.getElementById('agenda-finalizados');
+  elFinalizados.innerHTML = finalizados.length ? finalizados.map(ev=>`
+    <div class="agenda-row done">
+      <div class="agenda-main">
+        <div class="agenda-desarrollo">${escapeHtml(ev.desarrollo)}</div>
+        <div class="agenda-fecha">${formatDate(ev.fecha)}</div>
+      </div>
+      <div class="agenda-actions">
+        <button class="chip-btn" onclick="reabrirEvento('${ev.id}')">↺ Reabrir</button>
+        <button class="chip-btn eliminar" onclick="eliminarEvento('${ev.id}')">🗑 Eliminar</button>
+      </div>
+    </div>
+  `).join('') : `<div class="empty-state" style="padding:24px;"><span style="color:var(--steel); font-size:13px;">No hay eventos finalizados.</span></div>`;
+}
+
+/* =========================================================
+   EXPORTAR A EXCEL (CSV)
+   ========================================================= */
+function csvEscape(v){
+  v = (v===undefined || v===null) ? '' : String(v);
+  if(v.includes(';') || v.includes('"') || v.includes('\n')){
+    return '"' + v.replace(/"/g,'""') + '"';
+  }
+  return v;
+}
+function downloadCSV(filename, rows){
+  // BOM al inicio para que Excel reconozca acentos/ñ correctamente
+  const bom = '\uFEFF';
+  const content = bom + rows.map(r=>r.map(csvEscape).join(';')).join('\r\n');
+  const blob = new Blob([content], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function exportPolizasCSV(){
+  if(polizas.length===0){ alert('No hay pólizas para exportar.'); return; }
+  const rows = [['Asegurado','Contacto','Rol','Emails','Teléfonos','N° de póliza','Fecha de ingreso','Vencimiento']];
+  polizas.forEach(p=>{
+    rows.push([
+      p.asegurado, p.contacto||'', p.rol||'',
+      (p.emails||[]).join(' / '), (p.telefonos||[]).join(' / '),
+      p.numero||'', formatDate(p.fecha), formatDate(p.vencimiento)
+    ]);
+  });
+  downloadCSV('polizas_wizard_group.csv', rows);
+}
+function exportOrganizadorCSV(){
+  if(tree.length===0){ alert('No hay productores para exportar.'); return; }
+  const rows = [['Nombre','Rol','WG','Referente','Ingresante','Referido por','Email','Teléfono','Dirección','Fecha de ingreso']];
+  function walk(node, referidoPor, inheritedWG){
+    const rolDisplay = node.rol==='Otro' && node.rolOtro ? node.rolOtro : node.rol;
+    const direcciones = (node.direcciones||[]).map(d=>[d.texto,d.localidad,d.jurisdiccion].filter(Boolean).join(', ')).join(' / ');
+    const pool = maxPool - inheritedWG;
+    const referenteCalc = pool - node.ingresante;
+    rows.push([
+      node.nombre, rolDisplay, inheritedWG, referenteCalc, node.ingresante,
+      referidoPor||'', (node.emails||[]).join(' / '), (node.telefonos||[]).join(' / '),
+      direcciones, formatDate(node.fecha)
+    ]);
+    (node.children||[]).forEach(c=>walk(c, node.nombre, inheritedWG));
+  }
+  tree.forEach(n=>walk(n, '', n.wg));
+  downloadCSV('organizador_wizard_group.csv', rows);
+}
+
+/* init empty rows on first paint of modals */
+addSimpleRow('node-emails','email','ejemplo@correo.com');
+addSimpleRow('node-telefonos','tel','11-XXXX-XXXX');
+addDireccionRow('','','');
+addSimpleRow('poliza-emails','email','ejemplo@correo.com',3);
+addSimpleRow('poliza-telefonos','tel','11-XXXX-XXXX',3);
+</script>
+
+<!-- ============ FIREBASE — sincronización en tiempo real ============ -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDmHI5H9DaQWxd69Z-7dQ8bWwYgmcjttos",
+    authDomain: "wizard-group-cad20.firebaseapp.com",
+    projectId: "wizard-group-cad20",
+    storageBucket: "wizard-group-cad20.firebasestorage.app",
+    messagingSenderId: "107721300249",
+    appId: "1:107721300249:web:c3a88cc78f18e4729ecd88"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  const estadoDocRef = doc(db, "wizardgroup", "estado");
+  const statusEl = () => document.getElementById('sync-status');
+
+  let cloudReady = false;
+  let suppressNextEcho = false; // evita re-render redundante del propio guardado
+
+  onAuthStateChanged(auth, (user) => {
+    if(user){
+      cloudReady = true;
+      if(statusEl()) statusEl().textContent = '● en vivo';
+      if(statusEl()) statusEl().style.color = '#7fae8a';
+
+      // Escucha cambios en tiempo real (propios o de Mariano)
+      onSnapshot(estadoDocRef, (snap) => {
+        if(snap.exists()){
+          window.applyRemoteState(snap.data());
+        }
+      }, (err) => {
+        console.error('Error de sincronización:', err);
+        if(statusEl()) { statusEl().textContent = '● sin conexión'; statusEl().style.color = '#e08a75'; }
+      });
+    }
+  });
+
+  signInAnonymously(auth).catch((err) => {
+    console.error('No se pudo autenticar contra Firebase:', err);
+    if(statusEl()) { statusEl().textContent = '● error de acceso'; statusEl().style.color = '#e08a75'; }
+  });
+
+  // Expuesto globalmente para que saveState() (script clásico) pueda llamarlo
+  window.cloudSave = async function(state){
+    if(!cloudReady) return; // si todavía no autenticó, se guarda solo local y se sincroniza cuando conecte
+    try{
+      await setDoc(estadoDocRef, state);
+    }catch(e){
+      console.error('No se pudo guardar en la nube:', e);
+      if(statusEl()) { statusEl().textContent = '● error al guardar'; statusEl().style.color = '#e08a75'; }
+    }
+  };
+</script>
+</body>
+</html>
