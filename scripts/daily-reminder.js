@@ -1,5 +1,4 @@
 const admin = require('firebase-admin');
-const fetch = require('node-fetch');
 
 // --- Configuración ---
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
