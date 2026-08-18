@@ -27,5 +27,6 @@ jobs:
           EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
           EMAILJS_TEMPLATE_ID: ${{ secrets.EMAILJS_TEMPLATE_ID }}
           EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
-          EMAILJS_TO_EMAIL: ${{ secrets.EMAILJS_TO_EMAIL }}
+          EMAILJS_TO_EMAIL_1: ${{ secrets.EMAILJS_TO_EMAIL_1 }}
+          EMAILJS_TO_EMAIL_2: ${{ secrets.EMAILJS_TO_EMAIL_2 }}
         run: node scripts/daily-reminder.js
