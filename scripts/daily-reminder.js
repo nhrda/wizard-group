@@ -13,7 +13,6 @@ const db = admin.firestore();
 // Fechas en zona Argentina
 function getArgentinaDate(offsetDays = 0) {
   const now = new Date();
-  // Convertir a Argentina (UTC-3)
   const arg = new Date(now.toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
   arg.setDate(arg.getDate() + offsetDays);
   const y = arg.getFullYear();
@@ -87,29 +86,40 @@ async function main() {
     html += `</ul>`;
   }
 
-  // Enviar con EmailJS
-  const payload = {
-    service_id: process.env.EMAILJS_SERVICE_ID,
-    template_id: process.env.EMAILJS_TEMPLATE_ID,
-    user_id: process.env.EMAILJS_PUBLIC_KEY,
-    template_params: {
-      message_html: html,
-      to_email: process.env.EMAILJS_TO_EMAIL
+  // Lista de destinatarios (uno o varios)
+  const destinatarios = [
+    process.env.EMAILJS_TO_EMAIL_1,
+    process.env.EMAILJS_TO_EMAIL_2
+  ].filter(email => email && email.trim() !== '');
+
+  if (destinatarios.length === 0) {
+    console.log('No hay destinatarios configurados');
+    return;
+  }
+
+  for (const email of destinatarios) {
+    const payload = {
+      service_id: process.env.EMAILJS_SERVICE_ID,
+      template_id: process.env.EMAILJS_TEMPLATE_ID,
+      user_id: process.env.EMAILJS_PUBLIC_KEY,
+      template_params: {
+        message_html: html,
+        to_email: email
+      }
+    };
+
+    const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      console.log(`Mail enviado correctamente a ${email}`);
+    } else {
+      const text = await res.text();
+      console.error(`Error al enviar mail a ${email}:`, text);
     }
-  };
-
-  const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  });
-
-  if (res.ok) {
-    console.log('Mail enviado correctamente');
-  } else {
-    const text = await res.text();
-    console.error('Error al enviar mail:', text);
-    process.exit(1);
   }
 }
 
