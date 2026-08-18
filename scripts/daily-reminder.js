@@ -115,12 +115,14 @@ async function main() {
       body: JSON.stringify(payload)
     });
 
+const text = await res.text();
+
     if (res.ok) {
-      console.log(`Mail enviado correctamente a ${email}`);
+      console.log(`Mail aceptado por EmailJS para ${email}`);
+      console.log(`Respuesta EmailJS: ${text}`);
     } else {
-      const text = await res.text();
-      console.error(`Error al enviar mail a ${email}:`, text);
-    }
+      console.error(`Error EmailJS para ${email}:`, text);
+    } 
   }
 }
 
