@@ -325,6 +325,39 @@
   .chip-btn.eliminar{ border-color: rgba(224,138,117,0.4); color:#e08a75; }
   .chip-btn.eliminar:hover{ background: rgba(224,138,117,0.1); }
 
+  /* ---------- NOTICIAS ---------- */
+  .news-meta{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--steel); }
+  .news-featured-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; }
+  .news-card{
+    background:var(--slate); border:1px solid var(--line); border-radius:12px;
+    padding:18px; display:flex; flex-direction:column; gap:13px; min-width:0;
+    box-shadow:0 10px 30px rgba(5,24,34,.16);
+  }
+  .news-card.featured{ border-color:rgba(170,116,82,.4); background:linear-gradient(145deg,rgba(58,71,80,.98),var(--slate)); }
+  .news-card-top{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .news-source{ color:var(--clay); text-transform:uppercase; letter-spacing:.08em; font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600; }
+  .importance-badge{ font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:.07em; padding:5px 8px; border-radius:20px; border:1px solid var(--line); color:var(--steel); white-space:nowrap; }
+  .importance-badge.alta{ color:#e0a675; border-color:rgba(224,166,117,.55); background:rgba(170,116,82,.1); }
+  .importance-badge.media{ color:var(--bone); border-color:rgba(212,201,199,.28); }
+  .news-title{ font-family:'Fraunces',serif; font-size:19px; line-height:1.25; color:var(--bone); margin:0; font-weight:600; }
+  .news-card.featured .news-title{ font-size:21px; }
+  .news-summary{ color:var(--bone-dim); font-size:13px; line-height:1.58; margin:0; }
+  .news-analysis{ border-top:1px solid var(--line); padding-top:13px; display:grid; gap:9px; }
+  .news-analysis-title{ color:var(--clay); font-family:'IBM Plex Mono',monospace; text-transform:uppercase; letter-spacing:.07em; font-size:10.5px; }
+  .news-analysis-item{ color:var(--bone-dim); font-size:12.5px; line-height:1.5; }
+  .news-analysis-item b{ color:var(--bone); font-weight:600; }
+  .news-card-foot{ display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:auto; }
+  .news-link{ color:var(--clay); text-decoration:none; font-size:12.5px; font-weight:600; white-space:nowrap; }
+  .news-link:hover{ color:#bd8460; }
+  .news-list{ display:flex; flex-direction:column; gap:12px; }
+  .news-list .news-card{ padding:18px 20px; }
+  .news-filters{ display:flex; gap:8px; overflow-x:auto; padding:2px 0 8px; margin-bottom:12px; scrollbar-width:thin; }
+  .news-filter{ flex:0 0 auto; padding:7px 12px; border:1px solid var(--line); border-radius:20px; background:transparent; color:var(--steel); font:600 12px 'Inter',sans-serif; cursor:pointer; }
+  .news-filter.active{ color:var(--ink); border-color:var(--clay); background:var(--clay); }
+  .news-update{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--steel); }
+  .news-warning{ color:#e0a675; font-size:12px; margin:0 0 14px; display:none; }
+  @media (max-width: 900px){ .news-featured-grid{ grid-template-columns:1fr; } }
+
   /* ---------- MODAL ---------- */
   .modal-overlay{
     position:fixed; inset:0; background: rgba(5,24,34,0.75); backdrop-filter: blur(4px);
@@ -380,6 +413,7 @@
     .row2{ grid-template-columns:1fr; }
     .node-children{ margin-left:14px; padding-left:14px; }
     .agenda-row{ flex-direction:column; align-items:flex-start; }
+    .news-card.featured .news-title{ font-size:19px; }
   }
 </style>
 </head>
@@ -441,6 +475,7 @@
       <button class="tab-btn active" data-view="organizador" onclick="switchView('organizador')">Organizador</button>
       <button class="tab-btn" data-view="polizas" onclick="switchView('polizas')">Pólizas</button>
       <button class="tab-btn" data-view="agenda" onclick="switchView('agenda')">Agenda</button>
+      <button class="tab-btn" data-view="noticias" onclick="switchView('noticias')">Noticias</button>
     </div>
     <div class="user-chip">
       <span class="user-badge mono" id="sync-status" style="border-color: rgba(150,154,158,0.22);">● conectando…</span>
@@ -501,6 +536,26 @@
       <div class="agenda-list" id="agenda-activos"></div>
       <div class="agenda-group-title">Finalizados</div>
       <div class="agenda-list" id="agenda-finalizados"></div>
+    </section>
+
+    <!-- NOTICIAS -->
+    <section class="view" id="view-noticias">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Noticias</h2>
+          <div class="section-sub">Actualidad del mercado asegurador</div>
+        </div>
+        <div class="head-actions">
+          <span class="news-update" id="news-last-update">Última actualización: —</span>
+          <button class="btn btn-ghost btn-sm" id="news-refresh-btn" onclick="refreshNews()">↻ Actualizar</button>
+        </div>
+      </div>
+      <p class="news-warning" id="news-warning">No pudimos actualizar las noticias. Mostrando la última información disponible.</p>
+      <div class="agenda-group-title">Lo más relevante</div>
+      <div class="news-featured-grid" id="news-featured"></div>
+      <div class="agenda-group-title">Últimas noticias</div>
+      <div class="news-filters" id="news-filters" aria-label="Filtrar noticias"></div>
+      <div class="news-list" id="news-list"></div>
     </section>
   </main>
 </div>
@@ -1321,6 +1376,99 @@ function renderAgenda(){
 }
 
 /* =========================================================
+   NOTICIAS — fuente independiente de Agenda / estado general
+   ========================================================= */
+let newsItems = [];
+let newsFilter = 'Todas';
+let newsRefreshFromCloud = null;
+const NEWS_BASE_FILTERS = ['Todas','Alta relevancia','SSN / Regulación','Compañías','PAS / Productores','Automotor','Vida','Patrimoniales','Tecnología / IA'];
+
+function newsDateValue(value){
+  if(!value) return 0;
+  if(typeof value.toDate === 'function') return value.toDate().getTime();
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+}
+function newsDateLabel(value, withTime){
+  const time = newsDateValue(value);
+  if(!time) return 'Fecha no informada';
+  return new Intl.DateTimeFormat('es-AR', {
+    day:'2-digit', month:'short', year:'numeric', ...(withTime ? {hour:'2-digit',minute:'2-digit'} : {})
+  }).format(new Date(time));
+}
+function newsImportanceRank(item){ return item.importance==='ALTA' ? 3 : item.importance==='MEDIA' ? 2 : 1; }
+function sortedNews(items){
+  return [...items].sort((a,b)=>newsImportanceRank(b)-newsImportanceRank(a) || newsDateValue(b.publishedAt)-newsDateValue(a.publishedAt));
+}
+function newsCategories(item){ return [item.category, ...(item.secondaryCategories||[])].filter(Boolean); }
+function matchesNewsFilter(item){
+  if(newsFilter === 'Todas') return true;
+  if(newsFilter === 'Alta relevancia') return item.importance === 'ALTA';
+  if(newsFilter === 'Tecnología / IA') return newsCategories(item).some(c=>c==='Tecnología / Insurtech' || c==='IA');
+  return newsCategories(item).includes(newsFilter);
+}
+function renderNewsFilters(){
+  const dynamic = [...new Set(newsItems.flatMap(newsCategories))];
+  const filters = [...new Set([...NEWS_BASE_FILTERS, ...dynamic])];
+  const el = document.getElementById('news-filters');
+  el.innerHTML = filters.map(filter=>`<button class="news-filter ${filter===newsFilter?'active':''}" onclick="setNewsFilter(${JSON.stringify(filter)})">${escapeHtml(filter)}</button>`).join('');
+}
+function newsCard(item, featured){
+  const importance = (item.importance || 'BAJA').toUpperCase();
+  const summary = item.aiSummary || item.summary || 'No surge un extracto del artículo consultado.';
+  const why = item.aiAnalysis || 'No surge del artículo consultado.';
+  const impact = item.aiImpact || 'No surge del artículo consultado.';
+  const action = item.aiAction || 'No requiere acción inmediata.';
+  const categories = newsCategories(item).join(' · ');
+  const safeUrl = /^https?:\/\//i.test(item.articleUrl || '') ? item.articleUrl : '#';
+  return `<article class="news-card ${featured?'featured':''}">
+    <div class="news-card-top"><span class="news-source">${escapeHtml(item.sourceName || item.source || 'Fuente')}</span><span class="importance-badge ${importance.toLowerCase()}">${escapeHtml(importance)}</span></div>
+    <div class="news-meta">${newsDateLabel(item.publishedAt)}${categories ? ' · '+escapeHtml(categories) : ''}</div>
+    <h3 class="news-title">${escapeHtml(item.title || 'Noticia sin título')}</h3>
+    <p class="news-summary">${escapeHtml(summary)}</p>
+    <div class="news-analysis">
+      <div class="news-analysis-title">Análisis Wizard</div>
+      <div class="news-analysis-item"><b>¿Por qué importa?</b> ${escapeHtml(why)}</div>
+      <div class="news-analysis-item"><b>Impacto PAS.</b> ${escapeHtml(impact)}</div>
+      <div class="news-analysis-item"><b>Acción sugerida.</b> ${escapeHtml(action)}</div>
+    </div>
+    <div class="news-card-foot"><span class="news-meta">${escapeHtml(item.sourceName || '')}</span><a class="news-link" href="${escapeAttr(safeUrl)}" target="_blank" rel="noopener noreferrer">Leer noticia ↗</a></div>
+  </article>`;
+}
+function renderNews(){
+  const featured = document.getElementById('news-featured');
+  const list = document.getElementById('news-list');
+  const update = document.getElementById('news-last-update');
+  const warning = document.getElementById('news-warning');
+  if(!newsItems.length){
+    featured.innerHTML = '';
+    list.innerHTML = `<div class="empty-state"><span class="display">No hay noticias recientes disponibles.</span>La información se actualizará automáticamente cuando las fuentes publiquen novedades.</div>`;
+    renderNewsFilters();
+    return;
+  }
+  const sorted = sortedNews(newsItems);
+  const latestUpdate = sorted.reduce((latest,item)=>Math.max(latest, newsDateValue(item.fetchedAt), newsDateValue(item.updatedAt)),0);
+  update.textContent = `Última actualización: ${latestUpdate ? newsDateLabel(latestUpdate, true) : '—'}`;
+  warning.style.display = 'none';
+  featured.innerHTML = sorted.slice(0,3).map(item=>newsCard(item,true)).join('');
+  renderNewsFilters();
+  const filtered = sorted.filter(matchesNewsFilter);
+  list.innerHTML = filtered.length ? filtered.map(item=>newsCard(item,false)).join('') : `<div class="empty-state"><span class="display">Sin noticias para este filtro</span>Probá con otra categoría para ver la información disponible.</div>`;
+}
+function setNewsFilter(filter){ newsFilter = filter; renderNews(); }
+async function refreshNews(){
+  const button = document.getElementById('news-refresh-btn');
+  button.disabled = true;
+  button.textContent = 'Actualizando…';
+  try{
+    if(newsRefreshFromCloud) await newsRefreshFromCloud();
+  } finally {
+    button.disabled = false;
+    button.textContent = '↻ Actualizar';
+  }
+}
+
+/* =========================================================
    EXPORTAR A EXCEL (CSV)
    ========================================================= */
 function csvEscape(v){
@@ -1383,7 +1531,7 @@ addSimpleRow('poliza-telefonos','tel','11-XXXX-XXXX',3);
 <!-- ============ FIREBASE — sincronización en tiempo real ============ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, onSnapshot, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -1400,6 +1548,7 @@ addSimpleRow('poliza-telefonos','tel','11-XXXX-XXXX',3);
   const auth = getAuth(app);
 
   const estadoDocRef = doc(db, "wizardgroup", "estado");
+  const noticiasRef = collection(db, "noticias");
   const statusEl = () => document.getElementById('sync-status');
 
   let cloudReady = false;
@@ -1420,6 +1569,28 @@ addSimpleRow('poliza-telefonos','tel','11-XXXX-XXXX',3);
         console.error('Error de sincronización:', err);
         if(statusEl()) { statusEl().textContent = '● sin conexión'; statusEl().style.color = '#e08a75'; }
       });
+
+      // Noticias vive en su propia colección y no participa del documento wizardgroup/estado.
+      const noticiasQuery = query(noticiasRef, orderBy('publishedAt', 'desc'), limit(80));
+      onSnapshot(noticiasQuery, (snap) => {
+        newsItems = snap.docs.map(item => ({ id:item.id, ...item.data() }));
+        renderNews();
+      }, (err) => {
+        console.error('Error al cargar noticias:', err);
+        const warning = document.getElementById('news-warning');
+        if(warning) warning.style.display = 'block';
+      });
+      newsRefreshFromCloud = async function(){
+        try{
+          const snap = await getDocs(noticiasQuery);
+          newsItems = snap.docs.map(item => ({ id:item.id, ...item.data() }));
+          renderNews();
+        }catch(err){
+          console.error('Error al actualizar noticias:', err);
+          const warning = document.getElementById('news-warning');
+          if(warning) warning.style.display = 'block';
+        }
+      };
     }
   });
 

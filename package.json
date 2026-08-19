@@ -1,0 +1,12 @@
+{
+  "name": "wizard-group-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Automatizaciones de Wizard Group",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "firebase-admin": "14.2.0"
+  }
+}
