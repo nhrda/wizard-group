@@ -180,11 +180,11 @@ async function articleContext(article) {
 async function analyzeWithGemini(article) {
   if (!process.env.GEMINI_API_KEY) return fallbackAnalysis(article);
   const context = await articleContext(article);
-  const prompt = `Analizá esta noticia para productores asesores de seguros de Argentina. Usá exclusivamente el título y extracto provistos. No inventes datos, fechas, alcances ni predicciones. Cuando no sea claro, escribí exactamente “No surge del artículo consultado.”. Diferenciá hecho, interpretación y recomendación con un tono profesional y prudente. Respondé solo JSON válido con: aiSummary (máximo 500 caracteres), aiAnalysis (por qué importa, máximo 420 caracteres), aiImpact (impacto para un PAS, máximo 420 caracteres), aiAction (acción concreta o “No requiere acción inmediata.”, máximo 220 caracteres), importance (ALTA, MEDIA o BAJA).\n\nTÍTULO: ${article.title}\n\nEXTRACTO: ${context}`;
+  const prompt = `Analizá esta noticia para productores asesores de seguros de Argentina. Usá exclusivamente el título y extracto provistos. No inventes datos, fechas, alcances ni predicciones. Si algún punto no puede responderse con el material disponible, indicá exactamente "No surge del artículo consultado.", pero usá esa frase solamente cuando realmente no haya elementos para ese punto. Diferenciá hecho, interpretación y recomendación con un tono profesional y prudente. Respondé solo JSON válido con: aiSummary (resumen periodístico propio en 2 o 3 frases, máximo 500 caracteres, sin copiar textualmente el extracto), aiAnalysis (por qué importa esta noticia para el mercado asegurador argentino, desarrollado en 2 o 3 frases, máximo 700 caracteres), aiImpact (cómo puede impactar en la tarea diaria de un PAS: cartera, clientes, operatoria o negocio, desarrollado en 2 o 3 frases, máximo 700 caracteres), aiAction (acción concreta sugerida o "No requiere acción inmediata.", máximo 320 caracteres), importance (ALTA, MEDIA o BAJA).\n\nTÍTULO: ${article.title}\n\nEXTRACTO: ${context}`;
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(process.env.GEMINI_API_KEY)}`;
   try {
     const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 25000);
-    const response = await fetch(endpoint, { method:'POST', signal:controller.signal, headers:{'Content-Type':'application/json'}, body:JSON.stringify({ contents:[{parts:[{text:prompt}]}], generationConfig:{ responseMimeType:'application/json', temperature:0.1, maxOutputTokens:700 } }) });
+    const response = await fetch(endpoint, { method:'POST', signal:controller.signal, headers:{'Content-Type':'application/json'}, body:JSON.stringify({ contents:[{parts:[{text:prompt}]}], generationConfig:{ responseMimeType:'application/json', temperature:0.1, maxOutputTokens:1600 } }) });
     clearTimeout(timer);
     if (!response.ok) throw new Error(`Gemini HTTP ${response.status}: ${(await response.text()).slice(0,300)}`);
     const payload = await response.json();
@@ -192,12 +192,12 @@ async function analyzeWithGemini(article) {
     const result = JSON.parse(raw.replace(/^```json\s*|\s*```$/g, ''));
     return {
       aiSummary: compactText(result.aiSummary, 500) || fallbackAnalysis(article).aiSummary,
-      aiAnalysis: compactText(result.aiAnalysis, 420) || 'No surge del artículo consultado.',
-      aiImpact: compactText(result.aiImpact, 420) || 'No surge del artículo consultado.',
-      aiAction: compactText(result.aiAction, 220) || 'No requiere acción inmediata.',
+      aiAnalysis: compactText(result.aiAnalysis, 700) || 'No surge del artículo consultado.',
+      aiImpact: compactText(result.aiImpact, 700) || 'No surge del artículo consultado.',
+      aiAction: compactText(result.aiAction, 320) || 'No requiere acción inmediata.',
       importance: ['ALTA','MEDIA','BAJA'].includes(String(result.importance).toUpperCase()) ? String(result.importance).toUpperCase() : 'BAJA'
     };
-  } catch (error) { log(`Gemini falló para “${article.title}”: ${error.message}`); return fallbackAnalysis(article); }
+  } catch (error) { log(`Gemini falló para "${article.title}": ${error.message}`); return fallbackAnalysis(article); }
 }
 function deduplicate(items) {
   const urls = new Set(), titles = new Set();
